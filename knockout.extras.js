@@ -158,7 +158,7 @@
           else if (model[p] === 'integer')
             _fields[p] = koext.observableInteger(_value[p]);
           else
-            _fields[p] = koext.observable(_value[p]);
+            _fields[p] = ko.observable(_value[p]);
           _fields[p].errors = ko.observableArray();
           _fields[p].errors.has = has(_fields[p].errors);
           clean(_fields[p]);
