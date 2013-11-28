@@ -1,0 +1,27 @@
+{
+  "name": "knockout-extras",
+  "main": "knockout.extras.js",
+  "version": "0.1.0",
+  "homepage": "https://github.com/acornejo/knockout-extras",
+  "authors": [
+    "Alex Cornejo <acornejo@gmail.com>"
+  ],
+  "description": "Collection of Knockout Utilities",
+  "keywords": [
+    "knockout",
+    "utilities",
+    "dirtyFlag",
+    "observableInteger",
+    "observableNumber",
+    "observableDate",
+    "observableModel"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
