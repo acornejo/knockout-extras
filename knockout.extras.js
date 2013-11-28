@@ -21,7 +21,7 @@
       return _result;
     };
 
-    kext.observableDate = function (initialValue) {
+    koext.observableDate = function (initialValue) {
       var _actual = ko.observable(initialValue);
 
       var _day = ko.observable(),
