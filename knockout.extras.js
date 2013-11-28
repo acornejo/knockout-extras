@@ -47,7 +47,7 @@
         write: function (newValue) {
           var parsedValue = new Date(Date.parse(newValue));
           if (isNaN(parsedValue.valueOf())) {
-            _actual(newValue)
+            _actual(newValue);
             _day(undefined);
             _month(undefined);
             _year(undefined);
@@ -82,7 +82,7 @@
       });
 
       return result;
-    }
+    };
 
     koext.observableNumber = function(initialValue) {
       var _actual = ko.observable(initialValue);
@@ -170,13 +170,13 @@
       result.dirtyFlag = koext.dirtyFlag(_fields);
 
       return result;
-    }
+    };
   } // factory
 
-  if (typeof require === "function" && typeof exports === "object" && typeof module === "object") {
+  if (typeof require === "function" && typeof exports === "object" && typeof module === "object") 
       factory(require("knockout"), exports);
-  else if (typeof define === "function" && define["amd"]) {
+  else if (typeof define === "function" && define.amd) 
       define(["knockout", "exports"], factory);
-  else {
+  else
       factory(ko, ko);
 })();

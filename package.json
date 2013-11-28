@@ -1,0 +1,35 @@
+{
+  "name": "knockout-extras",
+  "description": "Collection of Knockout Utilities",
+  "version": "0.1.0",
+  "author": "Alex Cornejo",
+  "keywords": [
+    "knockout",
+    "utilities",
+    "dirtyFlag",
+    "observableInteger",
+    "observableNumber",
+    "observableDate",
+    "observableModel"
+  ],
+  "main": "knockout.extras.js",
+  "devDependencies": {
+    "uglify-js": "~2.4.0",
+    "jshint": "~2.3.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/acornejo/knockout-extras.git",
+    "web": "https://github.com/acornejo/knockout-extras"
+  },
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "http://github.com/acornejo/lode/raw/master/LICENSE"
+    }
+  ],
+  "scripts": {
+    "prepublish": "./node_modules/.bin/uglifyjs -o knockout.extras.min.js knockout.extras.js",
+    "test": "./node_modules/.bin/jshint *.js"
+  }
+}

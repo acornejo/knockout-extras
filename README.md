@@ -1,6 +1,7 @@
 # Knockout Extras
 
-Includes several knockout extra's that I've found useful.
+Includes several knockout extra's that I've found useful, and has no
+dependencies. The minified library is 3.3kb, and less than 1kb gzip'ed.
 
 ## Dirty Flag
 
