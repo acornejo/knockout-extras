@@ -104,9 +104,66 @@
       var _value = initialValue || {};
       var _fields = {};
 
+      function hasError(l) {
+        return function (e) {
+          return l.indexOf(e) !== -1;
+        };
+      }
+
+      function cleanError(e) {
+        return function () {
+          e.removeAll();
+        };
+      }
+
+      function errorParser(model, fields) {
+        return function parseErrors(errors) {
+          errors = errors || {};
+          for (var p in model) {
+            if (model.hasOwnProperty(p)) {
+              fields[p].errors.removeAll();
+              if (errors.hasOwnProperty(p)) {
+                for (var e in errors[p]) {
+                  if (errors[p].hasOwnProperty(e)) {
+                    fields[p].errors.push(e);
+                  }
+                }
+              }
+            }
+          }
+        };
+      }
+
+      for (var p in model) {
+        if (model.hasOwnProperty(p)) {
+          if (typeof model[p] === 'object')
+            _fields[p] = koext.observableModel(model[p], _value[p]);
+          else if (model[p] === 'date')
+            _fields[p] = koext.observableDate(_value[p]);
+          else if (model[p] === 'number')
+            _fields[p] = koext.observableNumber(_value[p]);
+          else if (model[p] === 'integer')
+            _fields[p] = koext.observableInteger(_value[p]);
+          else
+            _fields[p] = ko.observable(_value[p]);
+          _fields[p].errors = ko.observableArray();
+          _fields[p].errors.has = hasError(_fields[p].errors);
+          _fields[p].subscribe(cleanError(_fields[p].errors));
+        }
+      }
+
       var result = ko.computed({
         read: function() {
-          return ko.toJS(_fields);
+          var obj = {}, empty = true;
+          for (var p in model) {
+            if (model.hasOwnProperty(p) && _fields.hasOwnProperty(p)) {
+              obj[p] = _fields[p]();
+              if (obj[p] !== undefined)
+                empty = false;
+            }
+          }
+          if (!empty)
+            return obj;
         },
         write: function (newValue) {
           for (var p in model) {
@@ -117,57 +174,21 @@
                 _fields[p](undefined);
             }
           }
-          result.dirtyFlag.reset();
         }
       });
 
-      function has(l) {
-        return function (e) {
-          return l.indexOf(e) !== -1;
-        };
-      }
-
-      function clean(l) {
-        l.subscribe(function () {
-          l.errors.removeAll();
-        });
-      }
-
-      function parseErrors(errors) {
-        errors = errors || {};
-        for (var p in model) {
-          if (model.hasOwnProperty(p)) {
-            _fields[p].errors.removeAll();
-            if (errors.hasOwnProperty(p)) {
-              for (var e in errors[p]) {
-                if (errors[p].hasOwnProperty(e)) {
-                  _fields[p].errors.push(e);
-                }
-              }
-            }
-          }
-        }
-      }
-
-      for (var p in model) {
-        if (model.hasOwnProperty(p)) {
-          if (model[p] === 'date')
-            _fields[p] = koext.observableDate(_value[p]);
-          else if (model[p] === 'number')
-            _fields[p] = koext.observableNumber(_value[p]);
-          else if (model[p] === 'integer')
-            _fields[p] = koext.observableInteger(_value[p]);
-          else
-            _fields[p] = ko.observable(_value[p]);
-          _fields[p].errors = ko.observableArray();
-          _fields[p].errors.has = has(_fields[p].errors);
-          clean(_fields[p]);
+      for (p in model) 
+        if (model.hasOwnProperty(p))
           result[p] = _fields[p];
-        }
-      }
 
-      result.parseErrors = parseErrors;
+      result.parseErrors = errorParser(model, _fields);
       result.dirtyFlag = koext.dirtyFlag(_fields);
+      result.resetDirty = function () {
+        result.dirtyFlag.reset();
+        for (var p in model)
+          if (model.hasOwnProperty(p) && typeof model[p] == 'object')
+            _fields[p].resetDirty();
+      };
 
       return result;
     };
