@@ -271,6 +271,17 @@
       }
     };
 
+    ko.subscribable.fn.subscribeChanged = function(callback) {
+        if (!this.previousValueSubscription) {
+            this.previousValueSubscription = this.subscribe(function(_previousValue) {
+                this.previousValue = _previousValue;
+            }, this, 'beforeChange');
+        }
+        return this.subscribe(function(latestValue) {
+            callback(latestValue, this.previousValue);
+        }, this);
+    };
+
   } // factory
 
   if (typeof require === "function" && typeof exports === "object" && typeof module === "object") 
