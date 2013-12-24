@@ -1,7 +1,7 @@
 {
   "name": "knockout-extras",
   "main": "knockout.extras.js",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "homepage": "https://github.com/acornejo/knockout-extras",
   "authors": [
     "Alex Cornejo"
