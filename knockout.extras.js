@@ -30,7 +30,7 @@
 
       function updateDate() {
         var day = _day(), month = _month(), year = _year();
-        if (day !== undefined && month !== undefined && year !== undefined) 
+        if (day !== undefined && month !== undefined && year !== undefined)
           _actual(new Date(year, month, day));
         else if (day === undefined && month === undefined && year === undefined)
           _actual(undefined);
@@ -100,6 +100,21 @@
       return result;
     };
 
+    koext.observableBoolean = function (initialValue) {
+      var _actual = ko.observable(initialValue);
+
+      var result = ko.dependnatObservable({
+        read: function () {
+          return _actual() ? true : false;
+        },
+        write: function(value) {
+          _actual(value && value !== "false" && value !== "0" ? true : false);
+        }
+      });
+
+      return result;
+    };
+
     koext.observableModel = function (model, initialValue) {
       var _value = initialValue || {};
       var _fields = {};
@@ -144,6 +159,8 @@
             _fields[p] = koext.observableNumber(_value[p]);
           else if (model[p] === 'integer')
             _fields[p] = koext.observableInteger(_value[p]);
+          else if (model[p] === 'boolean')
+            _fields[p] = koext.observableBoolean(_value[p]);
           else
             _fields[p] = ko.observable(_value[p]);
           _fields[p].errors = ko.observableArray();
@@ -177,7 +194,7 @@
         }
       });
 
-      for (p in model) 
+      for (p in model)
         if (model.hasOwnProperty(p))
           result[p] = _fields[p];
 
@@ -188,6 +205,24 @@
         for (var p in model)
           if (model.hasOwnProperty(p) && typeof model[p] == 'object')
             _fields[p].resetDirty();
+      };
+      result.get = function (fieldname) {
+        var firstfield = fieldname, tailfields = null;
+        if (fieldname.indexOf('.') !== -1) {
+          tailfields = fieldname.split('.');
+          firstfield = tailfields.shift();
+        }
+        if (_fields.hasOwnProperty(firstfield)) {
+          if (tailfields) {
+            if (_fields[firstfield].hasOwnProperty('get'))
+              return _fields[firstfield].get(tailfields);
+            else
+              throw new Error('Field ' + firstfield + ' has no subfields.');
+          } else
+            return _fields[firstfield];
+        }
+        else
+          throw new Error('Field ' + firstfield + ' does not exist.');
       };
 
       return result;
@@ -203,7 +238,7 @@
             bindings.fileDataURL(e.target.result);
           };
           reader.readAsDataURL(files[0]);
-        } else 
+        } else
           bindings.fileDataURL(undefined);
       }
 
@@ -214,7 +249,7 @@
             bindings.fileArrayBuffer(e.target.result);
           };
           reader.readAsArrayBuffer(files[0]);
-        } else 
+        } else
           bindings.fileArrayBuffer(undefined);
       }
 
@@ -225,7 +260,7 @@
             bindings.fileBinaryString(e.target.result);
           };
           reader.readAsBinaryString(files[0]);
-        } else 
+        } else
           bindings.fileBinaryString(undefined);
       }
 
@@ -236,7 +271,7 @@
             bindings.fileText(e.target.result);
           };
           reader.readAsText(files[0]);
-        } else 
+        } else
           bindings.fileText(undefined);
       }
     }
@@ -296,9 +331,9 @@
 
   } // factory
 
-  if (typeof require === "function" && typeof exports === "object" && typeof module === "object") 
+  if (typeof require === "function" && typeof exports === "object" && typeof module === "object")
     factory(require("knockout"), exports);
-  else if (typeof define === "function" && define.amd) 
+  else if (typeof define === "function" && define.amd)
     define(["knockout", "exports"], factory);
   else
     factory(ko, ko);
