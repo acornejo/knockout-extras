@@ -21,7 +21,7 @@
       return _result;
     };
 
-    koext.bindingHandlers.truncatedText = {
+    ko.bindingHandlers.truncatedText = {
       update: function (element, valueAccessor, allBindingsAccessor) {
         var value = ko.utils.unwrapObservable(valueAccessor()),
         length = ko.utils.unwrapObservable(allBindingsAccessor().truncatedLength) || ko.bindingHandlers.truncatedText.defaultLength,
