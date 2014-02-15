@@ -57,7 +57,7 @@
 
     ko.bindingHandlers.integerValue = {
       init : function(element, valueAccessor, allBindingsAccessor) {
-        var value = ko.utils.unwrapObservable(valueAccessor());
+        var value = valueAccessor();
         var target = ko.computed({
           read: value,
           write: function(newValue) {
@@ -72,7 +72,7 @@
 
     ko.bindingHandlers.numberValue = {
       init : function(element, valueAccessor, allBindingsAccessor) {
-        var value = ko.utils.unwrapObservable(valueAccessor());
+        var value = valueAccessor();
         var target = ko.computed({
           read: value,
           write: function(newValue) {
