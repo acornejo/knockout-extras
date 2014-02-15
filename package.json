@@ -6,11 +6,15 @@
   "keywords": [
     "knockout",
     "utilities",
+    "extras",
     "dirtyFlag",
-    "observableInteger",
-    "observableNumber",
-    "observableDate",
-    "observableModel"
+    "integerValue",
+    "numberValue",
+    "dateValue",
+    "truncatedText",
+    "returnKey",
+    "paging",
+    "chooseFile"
   ],
   "main": "knockout.extras.js",
   "devDependencies": {

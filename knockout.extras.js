@@ -1,24 +1,47 @@
 (function() {
   function factory(ko, koext) {
     koext.dirtyFlag = function(root, isInitiallyDirty) {
-      var _result = function () {},
+      var target = function () {},
           _initialState = ko.observable(ko.toJSON(root)),
           _isInitiallyDirty = ko.observable(isInitiallyDirty);
 
-      _result.isDirty = ko.computed(function () {
+      target.isDirty = ko.computed(function () {
         return _isInitiallyDirty() || _initialState() !== ko.toJSON(root);
       });
 
-      _result.forceDirty =  function () {
+      target.forceDirty =  function () {
         _isInitiallyDirty(true);
       };
 
-      _result.reset = function () {
+      target.reset = function () {
         _initialState(ko.toJSON(root));
         _isInitiallyDirty(false);
       };
 
-      return _result;
+      return target;
+    };
+
+    ko.subscribable.fn.subscribeChanged = function(callback) {
+        if (!this.previousValueSubscription) {
+            this.previousValueSubscription = this.subscribe(function(_previousValue) {
+                this.previousValue = _previousValue;
+            }, this, 'beforeChange');
+        }
+        return this.subscribe(function(latestValue) {
+            callback(latestValue, this.previousValue);
+        }, this);
+    };
+
+    ko.bindingHandlers.returnKey = {
+      init: function(element, valueAccessor, allBindingsAccessor, viewModel) {
+        ko.utils.registerEventHandler(element, 'keydown', function(evt) {
+          if (evt.keyCode === 13) {
+            evt.preventDefault();
+            evt.target.blur();
+            valueAccessor().call(viewModel);
+          }
+        });
+      }
     };
 
     ko.bindingHandlers.truncatedText = {
@@ -30,6 +53,36 @@
         ko.bindingHandlers.text.update(element, function () { return truncatedValue; });
       },
       defaultLength: 160
+    };
+
+    ko.bindingHandlers.integerValue = {
+      init : function(element, valueAccessor, allBindingsAccessor) {
+        var value = ko.utils.unwrapObservable(valueAccessor());
+        var target = ko.computed({
+          read: value,
+          write: function(newValue) {
+            if (!isNaN(newValue))
+              value(parseInt(newValue, 10));
+          }
+        });
+        ko.bindingHandlers.value.init(element, function() { return target; }, allBindingsAccessor);
+      },
+      update : ko.bindingHandlers.value.update
+    };
+
+    ko.bindingHandlers.numberValue = {
+      init : function(element, valueAccessor, allBindingsAccessor) {
+        var value = ko.utils.unwrapObservable(valueAccessor());
+        var target = ko.computed({
+          read: value,
+          write: function(newValue) {
+            if (!isNaN(newValue))
+              value(parseFloat(newValue));
+          }
+        });
+        ko.bindingHandlers.value.init(element, function() { return target; }, allBindingsAccessor);
+      },
+      update : ko.bindingHandlers.value.update
     };
 
     koext.observableDate = function (initialValue) {
@@ -51,7 +104,7 @@
       _month.subscribe(updateDate);
       _year.subscribe(updateDate);
 
-      var result = ko.dependentObservable({
+      var target = ko.computed({
         read: function () {
           return _actual();
         },
@@ -72,60 +125,72 @@
         }
       });
 
-      result.day = _day;
-      result.month = _month;
-      result.year = _year;
+      target.day = _day;
+      target.month = _month;
+      target.year = _year;
 
-      return result;
+      return target;
     };
 
-    koext.observableInteger = function(initialValue) {
-      var _actual = ko.observable(initialValue);
+    ko.extenders.paging = function(target, pageSize) {
+        var _pageSize = ko.observable(pageSize || 10),
+            _currentPage = ko.observable(1); // default current page to 1
 
-      var result = ko.dependentObservable({
-        read: function() {
-          return _actual();
-        },
-        write: function(newValue) {
-          var parsedValue = parseInt(newValue);
-          _actual(isNaN(parsedValue) ? newValue : parsedValue);
-        }
-      });
+        target.pageSize = ko.computed({
+            read: _pageSize,
+            write: function(newValue) {
+                if (newValue > 0) {
+                    _pageSize(newValue);
+                }
+                else {
+                    _pageSize(10);
+                }
+            }
+        });
 
-      return result;
+        target.currentPage = ko.computed({
+            read: _currentPage,
+            write: function(newValue) {
+                if (newValue > target.pageCount()) {
+                    _currentPage(target.pageCount());
+                }
+                else if (newValue <= 0) {
+                    _currentPage(1);
+                }
+                else {
+                    _currentPage(newValue);
+                }
+            }
+        });
+
+        target.pageCount = ko.computed(function() {
+            return Math.ceil(target().length / target.pageSize()) || 1;
+        });
+
+        target.currentPageData = ko.computed(function() {
+            var pageSize = _pageSize(),
+                pageIndex = _currentPage(),
+                startIndex = pageSize * (pageIndex - 1),
+                endIndex = pageSize * pageIndex;
+
+            return target().slice(startIndex, endIndex);
+        });
+
+        target.gotoFirst = function() {
+            target.currentPage(1);
+        };
+        target.gotoPrevious = function() {
+            target.currentPage(target.currentPage() - 1);
+        };
+        target.gotoNext = function() {
+            target.currentPage(target.currentPage() + 1);
+        };
+        target.gotoLast = function() {
+            target.currentPage(target.pageCount());
+        };
+
+        return target;
     };
-
-    koext.observableNumber = function(initialValue) {
-      var _actual = ko.observable(initialValue);
-
-      var result = ko.dependentObservable({
-        read: function() {
-          return _actual();
-        },
-        write: function(newValue) {
-          var parsedValue = parseFloat(newValue);
-          _actual(isNaN(parsedValue) ? newValue : parsedValue);
-        }
-      });
-
-      return result;
-    };
-
-    koext.observableBoolean = function (initialValue) {
-      var _actual = ko.observable(initialValue);
-
-      var result = ko.dependnatObservable({
-        read: function () {
-          return _actual() ? true : false;
-        },
-        write: function(value) {
-          _actual(value && value !== "false" && value !== "0" ? true : false);
-        }
-      });
-
-      return result;
-    };
-
 
     function processFiles(bindings, files) {
       var reader;
@@ -202,29 +267,6 @@
 
       update: function (element, valueAccessor, allBindingsAccesor) {
         processFiles(allBindingsAccesor(), ko.utils.unwrapObservable(valueAccessor()));
-      }
-    };
-
-    ko.subscribable.fn.subscribeChanged = function(callback) {
-        if (!this.previousValueSubscription) {
-            this.previousValueSubscription = this.subscribe(function(_previousValue) {
-                this.previousValue = _previousValue;
-            }, this, 'beforeChange');
-        }
-        return this.subscribe(function(latestValue) {
-            callback(latestValue, this.previousValue);
-        }, this);
-    };
-
-    ko.bindingHandlers.returnKey = {
-      init: function(element, valueAccessor, allBindingsAccessor, viewModel) {
-        ko.utils.registerEventHandler(element, 'keydown', function(evt) {
-          if (evt.keyCode === 13) {
-            evt.preventDefault();
-            evt.target.blur();
-            valueAccessor().call(viewModel);
-          }
-        });
       }
     };
 
